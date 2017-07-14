@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.ComponentModel;
 using Xamarin.Forms.Platform.iOS;
 using Google.Maps;
@@ -12,6 +12,7 @@ using GCameraUpdate = Google.Maps.CameraUpdate;
 using GCameraPosition = Google.Maps.CameraPosition;
 using System.Threading.Tasks;
 using Foundation;
+using CoreLocation;
 
 namespace Xamarin.Forms.GoogleMaps.iOS
 {
@@ -55,6 +56,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
             if (disposing)
             {
                 Map.OnSnapshot -= OnSnapshot;
+                Map.OnGetPoint -= OnGetPoint;
                 _cameraLogic.Unregister();
 
                 foreach (var logic in _logics)
@@ -93,6 +95,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
             {
                 var oldMapModel = (Map)e.OldElement;
                 oldMapModel.OnSnapshot -= OnSnapshot;
+                oldMapModel.OnGetPoint -= OnGetPoint;
                 _cameraLogic.Unregister();
 
                 if (oldMapView != null)
@@ -120,7 +123,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
 
                 _cameraLogic.Register(Map, NativeMap);
                 Map.OnSnapshot += OnSnapshot;
-
+                Map.OnGetPoint += OnGetPoint;
                 _cameraLogic.MoveCamera(mapModel.InitialCameraUpdate);
 
                 _uiSettingsLogic.Register(Map, NativeMap);
@@ -185,7 +188,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
                 UpdateIsTrafficEnabled();
             }
             else if (e.PropertyName == VisualElement.HeightProperty.PropertyName &&
-                     ((Map) Element).InitialCameraUpdate != null)
+                     ((Map)Element).InitialCameraUpdate != null)
             {
                 _shouldUpdateRegion = true;
             }
@@ -226,6 +229,16 @@ namespace Xamarin.Forms.GoogleMaps.iOS
 
         }
 
+        void OnGetPoint(GetPointMessage pointMessage)
+        {
+            var coord = new CLLocationCoordinate2D(pointMessage.Pin.Position.Latitude, pointMessage.Pin.Position.Longitude);
+
+            Task.Run(() =>
+            {
+                pointMessage.OnGetPoint.Invoke(NativeMap.Projection.PointForCoordinate(coord).ToPoint());
+            });
+        }
+
         void OnSnapshot(TakeSnapshotMessage snapshotMessage)
         {
             UIGraphics.BeginImageContextWithOptions(NativeMap.Frame.Size, false, 0f);
@@ -234,7 +247,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
             UIGraphics.EndImageContext();
 
             // Why using task? Because Android side is asynchronous. 
-            Task.Run(() => 
+            Task.Run(() =>
             {
                 snapshotMessage.OnSnapshot.Invoke(snapshot.AsPNG().AsStream());
             });
@@ -315,7 +328,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
 
         void UpdateHasIndoorEnabled()
         {
-            ((MapView) Control).IndoorEnabled = ((Map)Element).IsIndoorEnabled;
+            ((MapView)Control).IndoorEnabled = ((Map)Element).IsIndoorEnabled;
         }
 
         void UpdateMapType()

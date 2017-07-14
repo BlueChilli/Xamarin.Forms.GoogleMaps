@@ -34,9 +34,9 @@ namespace Xamarin.Forms.GoogleMaps
         public static readonly BindableProperty InitialCameraUpdateProperty = BindableProperty.Create(
             nameof(InitialCameraUpdate), typeof(CameraUpdate), typeof(Map),
             CameraUpdateFactory.NewPositionZoom(new Position(41.89, 12.49), 10),  // center on Rome by default
-            propertyChanged: (bindable, oldValue, newValue) => 
+            propertyChanged: (bindable, oldValue, newValue) =>
             {
-                ((Map)bindable)._useMoveToRegisonAsInitialBounds = false;   
+                ((Map)bindable)._useMoveToRegisonAsInitialBounds = false;
             });
 
         public static readonly BindableProperty PaddingProperty = BindableProperty.Create(nameof(PaddingProperty), typeof(Thickness), typeof(Map), default(Thickness));
@@ -77,7 +77,9 @@ namespace Xamarin.Forms.GoogleMaps
 
         internal Action<CameraUpdateMessage> OnAnimateCamera { get; set; }
 
-        internal Action<TakeSnapshotMessage> OnSnapshot{ get; set; }
+        internal Action<TakeSnapshotMessage> OnSnapshot { get; set; }
+
+        internal Action<GetPointMessage> OnGetPoint { get; set; }
 
         MapSpan _visibleRegion;
 
@@ -119,8 +121,8 @@ namespace Xamarin.Forms.GoogleMaps
 
         public bool IsIndoorEnabled
         {
-            get { return (bool) GetValue(IndoorEnabledProperty); }
-            set { SetValue(IndoorEnabledProperty, value);}
+            get { return (bool)GetValue(IndoorEnabledProperty); }
+            set { SetValue(IndoorEnabledProperty, value); }
         }
 
         public bool IsShowingUser
@@ -248,7 +250,7 @@ namespace Xamarin.Forms.GoogleMaps
             var comp = new TaskCompletionSource<AnimationStatus>();
 
             SendMoveCamera(new CameraUpdateMessage(cameraUpdate, null, new DelegateAnimationCallback(
-                () => comp.SetResult(AnimationStatus.Finished), 
+                () => comp.SetResult(AnimationStatus.Finished),
                 () => comp.SetResult(AnimationStatus.Canceled))));
 
             return comp.Task;
@@ -265,6 +267,14 @@ namespace Xamarin.Forms.GoogleMaps
             return comp.Task;
         }
 
+        public Task<Point> PointForPin(Pin pin)
+        {
+            var comp = new TaskCompletionSource<Point>();
+
+            SendGetPoint(new GetPointMessage((point) => comp.SetResult(point), pin));
+
+            return comp.Task;
+        }
 
         public Task<Stream> TakeSnapshot()
         {
@@ -380,7 +390,7 @@ namespace Xamarin.Forms.GoogleMaps
         {
             OnMoveCamera?.Invoke(message);
         }
-    
+
         void SendAnimateCamera(CameraUpdateMessage message)
         {
             OnAnimateCamera?.Invoke(message);
@@ -389,6 +399,11 @@ namespace Xamarin.Forms.GoogleMaps
         void SendTakeSnapshot(TakeSnapshotMessage message)
         {
             OnSnapshot?.Invoke(message);
+        }
+
+        void SendGetPoint(GetPointMessage message)
+        {
+            OnGetPoint?.Invoke(message);
         }
     }
 }
