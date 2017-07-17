@@ -81,6 +81,8 @@ namespace Xamarin.Forms.GoogleMaps
 
         internal Action<GetPointMessage> OnGetPoint { get; set; }
 
+        internal Action<GetPositionMessage> OnGetPosition { get; set; }
+
         MapSpan _visibleRegion;
 
         public Map()
@@ -276,6 +278,15 @@ namespace Xamarin.Forms.GoogleMaps
             return comp.Task;
         }
 
+        public Task<Position> PositionForPoint(Point point)
+        {
+            var comp = new TaskCompletionSource<Position>();
+
+            SendGetPosition(new GetPositionMessage((position) => comp.SetResult(position), point));
+
+            return comp.Task;
+        }
+
         public Task<Stream> TakeSnapshot()
         {
             var comp = new TaskCompletionSource<Stream>();
@@ -404,6 +415,11 @@ namespace Xamarin.Forms.GoogleMaps
         void SendGetPoint(GetPointMessage message)
         {
             OnGetPoint?.Invoke(message);
+        }
+
+        void SendGetPosition(GetPositionMessage message)
+        {
+            OnGetPosition?.Invoke(message);
         }
     }
 }

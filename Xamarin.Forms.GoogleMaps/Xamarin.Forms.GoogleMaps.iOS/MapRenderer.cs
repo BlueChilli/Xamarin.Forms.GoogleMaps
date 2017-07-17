@@ -57,6 +57,8 @@ namespace Xamarin.Forms.GoogleMaps.iOS
             {
                 Map.OnSnapshot -= OnSnapshot;
                 Map.OnGetPoint -= OnGetPoint;
+                Map.OnGetPosition -= OnGetPosition;
+
                 _cameraLogic.Unregister();
 
                 foreach (var logic in _logics)
@@ -96,6 +98,8 @@ namespace Xamarin.Forms.GoogleMaps.iOS
                 var oldMapModel = (Map)e.OldElement;
                 oldMapModel.OnSnapshot -= OnSnapshot;
                 oldMapModel.OnGetPoint -= OnGetPoint;
+                oldMapModel.OnGetPosition -= OnGetPosition;
+
                 _cameraLogic.Unregister();
 
                 if (oldMapView != null)
@@ -124,6 +128,8 @@ namespace Xamarin.Forms.GoogleMaps.iOS
                 _cameraLogic.Register(Map, NativeMap);
                 Map.OnSnapshot += OnSnapshot;
                 Map.OnGetPoint += OnGetPoint;
+                Map.OnGetPosition += OnGetPosition;
+
                 _cameraLogic.MoveCamera(mapModel.InitialCameraUpdate);
 
                 _uiSettingsLogic.Register(Map, NativeMap);
@@ -236,6 +242,15 @@ namespace Xamarin.Forms.GoogleMaps.iOS
             Task.Run(() =>
             {
                 pointMessage.OnGetPoint.Invoke(NativeMap.Projection.PointForCoordinate(coord).ToPoint());
+            });
+
+        }
+
+        void OnGetPosition(GetPositionMessage positionMessage)
+        {
+            Task.Run(() =>
+            {
+                positionMessage.OnGetPosition.Invoke(NativeMap.Projection.CoordinateForPoint(positionMessage.Point.ToCGPoint()).ToPosition());
             });
         }
 

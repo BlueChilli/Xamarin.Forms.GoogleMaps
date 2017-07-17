@@ -81,7 +81,8 @@
     <Compile Include="UiSettings.cs" />
     <Compile Include="Logics\BaseUiSettingsLogic.cs" />
     <Compile Include="MapStyle.cs" />
-    <Compile Include="Logics\GetPointMessage.cs" />
+    <Compile Include="Internals\GetPointMessage.cs" />
+    <Compile Include="Internals\GetPositionMessage.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
